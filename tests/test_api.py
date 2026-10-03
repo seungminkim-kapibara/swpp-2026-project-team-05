@@ -39,6 +39,11 @@ class AnalyzeApiTests(SimpleTestCase):
             "missing_configuration": [],
         })
 
+    @patch.dict(os.environ, {"GEMINI_API_KEY": "", "GOOGLE_API_KEY": "test-google-key"})
+    def test_google_api_key_is_accepted_for_gemini(self):
+        response = self.client.get("/api/health")
+        self.assertTrue(response.json()["analysis_ready"])
+
     @patch("server.views.analyze_related_articles")
     def test_analyze_returns_existing_pipeline_result(self, analyze):
         analyze.return_value = {
@@ -95,7 +100,7 @@ class AnalyzeApiTests(SimpleTestCase):
     def test_wrong_method_is_rejected(self):
         self.assertEqual(self.client.get("/api/analyze").status_code, 405)
 
-    @patch.dict(os.environ, {"GEMINI_API_KEY": "", "NAVER_CLIENT_ID": ""})
+    @patch.dict(os.environ, {"GEMINI_API_KEY": "", "GOOGLE_API_KEY": "", "NAVER_CLIENT_ID": ""})
     def test_missing_credentials_are_reported_without_calling_pipeline(self):
         with patch("server.views.analyze_related_articles") as analyze:
             health = self.client.get("/api/health")

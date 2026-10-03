@@ -1,6 +1,6 @@
 """Small Gemini adapter for FrameLESS's structured LLM calls.
 
-Install ``google-genai`` and set GEMINI_API_KEY in the backend environment.
+Install ``google-genai`` and set GOOGLE_API_KEY or GEMINI_API_KEY in the backend environment.
 """
 
 from __future__ import annotations
@@ -19,11 +19,17 @@ class ModelResponseError(RuntimeError):
     """The model did not return usable structured output."""
 
 
+def get_gemini_api_key() -> str:
+    """Accept the two environment variable names supported by Google GenAI."""
+    return (os.getenv("GOOGLE_API_KEY", "").strip()
+            or os.getenv("GEMINI_API_KEY", "").strip())
+
+
 class GeminiJSONClient:
     def __init__(self, model: str | None = None) -> None:
-        api_key = os.getenv("GEMINI_API_KEY", "").strip()
+        api_key = get_gemini_api_key()
         if not api_key:
-            raise RuntimeError("Set GEMINI_API_KEY in the environment")
+            raise RuntimeError("Set GOOGLE_API_KEY or GEMINI_API_KEY in the environment")
         try:
             from google import genai
         except ImportError as exc:

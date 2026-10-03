@@ -12,16 +12,21 @@ from django.views.decorators.http import require_GET, require_POST
 
 from article_fetch import validate_article_url
 from article_search import analyze_related_articles
+from model_client import get_gemini_api_key
 
 
 logger = logging.getLogger(__name__)
 MAX_BODY_BYTES = 8192
 _analysis_slot = threading.BoundedSemaphore(1)
-REQUIRED_API_KEYS = ("GEMINI_API_KEY", "NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET")
+REQUIRED_NAVER_KEYS = ("NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET")
 
 
 def _missing_api_keys() -> list[str]:
-    return [key for key in REQUIRED_API_KEYS if not os.getenv(key, "").strip()]
+    missing = []
+    if not get_gemini_api_key():
+        missing.append("GOOGLE_API_KEY or GEMINI_API_KEY")
+    missing.extend(key for key in REQUIRED_NAVER_KEYS if not os.getenv(key, "").strip())
+    return missing
 
 
 def _error(code: str, message: str, status: int) -> JsonResponse:

@@ -6,7 +6,8 @@
 
 ## 로컬 백엔드 실행
 
-Python 3.14에서 확인했습니다. Gemini와 NAVER API HUB 키는 서버 프로세스에만
+Python 3.14에서 확인했습니다. Gemini 키는 `GOOGLE_API_KEY` 또는
+`GEMINI_API_KEY`로 설정할 수 있습니다. Gemini와 NAVER API HUB 키는 서버 프로세스에만
 설정하고 Git이나 Android 앱에 넣지 마세요. `NAVER_CLIENT_ID`와
 `NAVER_CLIENT_SECRET`은 일반 NAVER Developers Open API가 아닌
 [NAVER API HUB](https://api.ncloud-docs.com/docs/naver-api-hub-search-news)의 값입니다.
@@ -34,7 +35,7 @@ curl -X POST http://127.0.0.1:8000/api/analyze \
   -d '{"url":"https://n.news.naver.com/article/057/0001971678","max_related":3}'
 ```
 
-`/api/health`의 `analysis_ready`가 `true`면 세 가지 키가 모두 설정된 상태입니다.
+`/api/health`의 `analysis_ready`가 `true`면 Gemini 키와 NAVER 키 두 개가 설정된 상태입니다.
 키가 빠졌다면 `missing_configuration`에 해당 환경변수 이름이 표시됩니다.
 
 `max_related`는 생략할 수 있으며 1~3 사이의 정수입니다. 성공 응답은 기존 분석
