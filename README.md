@@ -1,7 +1,7 @@
 # FrameLESS
 
 뉴스 기사 하나를 분석하고 같은 사건의 다른 보도와 문장 표현을 비교하는 프로젝트입니다.
-Android 화면에서 기사 URL을 입력하면 로컬 Django API를 호출하고 실제 분석 결과의
+Android 화면에서 기사 URL을 입력하면 Django API를 호출하고 실제 분석 결과의
 원문 인용과 출처 링크를 보여줍니다.
 
 ## 로컬 백엔드 실행
@@ -55,20 +55,40 @@ python manage.py test
 
 현재 분석 결과를 저장하지 않아 데이터베이스는 사용하지 않습니다. 기사 URL은
 HTTP(S) 도메인 주소를 받으며 localhost, IP 주소, 별도 포트는 거부합니다.
-이 서버는 **로컬 개발용**입니다. 인증이 없으므로 인터넷에 공개하지 마세요.
+로컬 개발에서는 인증 없이 요청할 수 있습니다. 원격 배포에서는 팀 테스트 코드가
+필수이며, 키와 코드는 서버 환경변수로만 설정합니다.
 
-## Cloud Run 배포 준비
+## Render 무료 웹 서비스로 팀 테스트
 
-루트의 `Dockerfile`은 Django API를 Gunicorn으로 실행합니다. Cloud Run에서는
-`DJANGO_ENV=production`으로 실행되며 `DJANGO_SECRET_KEY`가 반드시 필요합니다.
-Gemini 키(`GOOGLE_API_KEY` 또는 `GEMINI_API_KEY`)와 `NAVER_CLIENT_ID`,
-`NAVER_CLIENT_SECRET`도 런타임에 Secret Manager에서 주입해야 합니다. API 키와
-`.env` 파일은 컨테이너 이미지나 Git에 포함하지 않습니다.
+루트의 `render.yaml`은 무료 Docker 웹 서비스를 정의합니다. Render 계정에서
+GitHub 저장소를 연결하고 **New > Blueprint**를 선택해 이 파일을 적용하세요.
+처음 생성할 때 Render가 다음 값을 묻습니다.
 
-현재 `/api/analyze`에는 사용자 인증과 공유 저장소 기반의 호출량 제한이 없습니다.
-이 기능을 추가하고 Android 앱을 HTTPS 주소로 연결하기 전에는 Cloud Run 서비스를
-**비공개**로 유지해야 합니다. 결과 저장을 하지 않으므로 별도 DB는 아직 필요하지
-않습니다.
+- `ANALYZE_ACCESS_TOKEN`: 팀 테스트용 긴 임의 문자열. `python3 -c 'import secrets; print(secrets.token_urlsafe(32))'`로 만들 수 있습니다.
+- `GOOGLE_API_KEY` 또는 `GEMINI_API_KEY`: Blueprint는 `GOOGLE_API_KEY`를 사용합니다.
+- `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`: NAVER API HUB 값.
+
+`DJANGO_SECRET_KEY`는 Render가 생성합니다. 위 비밀값은 Git, Android 설정 파일,
+채팅에 올리지 말고 Render 설정에만 입력하세요. 팀원에게는 테스트 코드만 별도
+경로로 전달합니다. `/api/health`에서 `analysis_ready`가 `true`인지 확인하세요.
+무료 서비스는 15분간 요청이 없으면 멈추고 다음 요청에 시간이 걸릴 수 있습니다.
+결과를 저장하지 않으므로 DB는 만들지 않습니다.
+
+Android Studio에서 원격 서버를 쓰려면 Git이 무시하는 `android/local.properties`에
+실제 Render URL을 추가하세요. 기존 `sdk.dir` 줄은 유지합니다.
+
+```properties
+framelessBackendUrl=https://실제-서비스-주소.onrender.com
+```
+
+다시 빌드하면 기사 입력 화면에 `팀 테스트 코드` 입력칸이 보입니다. 서버에 설정한
+`ANALYZE_ACCESS_TOKEN`을 입력해 테스트하세요. 테스트 코드는 앱에 저장되지
+않아 앱을 다시 켜면 재입력해야 합니다. URL을 설정하지 않으면 기존 로컬
+에뮬레이터 주소(`http://10.0.2.2:8000`)를 사용합니다.
+
+팀 테스트 코드는 공개 서비스에서 임의 호출을 줄이기 위한 간단한 보호 장치입니다.
+사람별 계정과 지속적인 호출량 제한은 없으므로 공개 출시 전에 별도로 구현해야
+합니다. Gemini와 NAVER API의 자체 사용량과 비용도 확인하세요.
 
 ## Android 에뮬레이터에서 확인
 
