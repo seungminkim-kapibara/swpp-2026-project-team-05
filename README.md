@@ -57,6 +57,19 @@ python manage.py test
 HTTP(S) 도메인 주소를 받으며 localhost, IP 주소, 별도 포트는 거부합니다.
 이 서버는 **로컬 개발용**입니다. 인증이 없으므로 인터넷에 공개하지 마세요.
 
+## Cloud Run 배포 준비
+
+루트의 `Dockerfile`은 Django API를 Gunicorn으로 실행합니다. Cloud Run에서는
+`DJANGO_ENV=production`으로 실행되며 `DJANGO_SECRET_KEY`가 반드시 필요합니다.
+Gemini 키(`GOOGLE_API_KEY` 또는 `GEMINI_API_KEY`)와 `NAVER_CLIENT_ID`,
+`NAVER_CLIENT_SECRET`도 런타임에 Secret Manager에서 주입해야 합니다. API 키와
+`.env` 파일은 컨테이너 이미지나 Git에 포함하지 않습니다.
+
+현재 `/api/analyze`에는 사용자 인증과 공유 저장소 기반의 호출량 제한이 없습니다.
+이 기능을 추가하고 Android 앱을 HTTPS 주소로 연결하기 전에는 Cloud Run 서비스를
+**비공개**로 유지해야 합니다. 결과 저장을 하지 않으므로 별도 DB는 아직 필요하지
+않습니다.
+
 ## Android 에뮬레이터에서 확인
 
 위 명령으로 Django 서버를 켠 상태에서 `android/` 프로젝트를 Android Studio로
