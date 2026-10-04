@@ -92,6 +92,29 @@ framelessBackendUrl=https://실제-도메인
 계정과 지속적인 호출량 제한은 없으므로 공개 출시 전에 별도로 구현해야 합니다.
 EC2와 Gemini·NAVER API 사용량도 각각 확인하세요.
 
+## Vercel 배포
+
+`vercel.json`은 이 Django 프로젝트를 서울 리전의 Python 함수로 실행하고,
+분석 요청의 최대 실행 시간을 300초로 설정합니다. DB는 사용하지 않습니다.
+Vercel 프로젝트의 환경변수에 다음을 설정한 뒤 배포하세요.
+
+| 변수 | 값 |
+| --- | --- |
+| `DJANGO_ENV` | `production` |
+| `DJANGO_ALLOWED_HOSTS` | `.vercel.app` |
+| `DJANGO_SECRET_KEY` | 길고 임의적인 새 문자열 |
+| `ANALYZE_ACCESS_TOKEN` | 팀 테스트용 임의 문자열 |
+| `GOOGLE_API_KEY` | Gemini API 키 |
+| `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET` | NAVER API HUB 키 |
+
+비밀값을 `vercel.json`, Git, Android 앱에 넣지 마세요. `.vercelignore`가 로컬
+`.env`와 Android 빌드 파일을 업로드 대상에서 제외합니다. 배포 후
+`https://배포주소/api/health`에서 `analysis_ready: true`를 확인하고,
+Android의 `android/local.properties`에
+`framelessBackendUrl=https://배포주소`를 설정해 다시 빌드하세요.
+Vercel 무료 Hobby의 함수 실행 한도는 300초입니다. 이 시간을 넘긴 기사 분석은
+실패하므로 실제 기사로 끝까지 테스트해야 합니다.
+
 ## Android 에뮬레이터에서 확인
 
 위 명령으로 Django 서버를 켠 상태에서 `android/` 프로젝트를 Android Studio로
