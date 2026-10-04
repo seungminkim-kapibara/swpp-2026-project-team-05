@@ -33,21 +33,17 @@ internal data class AnalysisResult(
 )
 
 internal object AnalysisApi {
-    // The default URL reaches the host machine from the Android emulator.
-    private val BASE_URL = BuildConfig.BACKEND_BASE_URL.trimEnd('/')
-    val requiresTeamCode: Boolean = BASE_URL.startsWith("https://")
+    // The Android emulator reaches the host machine's localhost through 10.0.2.2.
+    private const val BASE_URL = "http://10.0.2.2:8000"
     private const val MAX_RELATED_ARTICLES = 3
 
-    suspend fun analyze(articleUrl: String, teamCode: String = ""): AnalysisResult = withContext(Dispatchers.IO) {
+    suspend fun analyze(articleUrl: String): AnalysisResult = withContext(Dispatchers.IO) {
         val connection = (URL("$BASE_URL/api/analyze").openConnection() as HttpURLConnection)
         try {
             connection.requestMethod = "POST"
             connection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
-            if (teamCode.isNotBlank()) {
-                connection.setRequestProperty("Authorization", "Bearer ${teamCode.trim()}")
-            }
             connection.connectTimeout = 10_000
-            connection.readTimeout = 600_000
+            connection.readTimeout = 300_000
             connection.doOutput = true
             val request = JSONObject().put("url", articleUrl)
                 .put("max_related", MAX_RELATED_ARTICLES)
@@ -68,7 +64,7 @@ internal object AnalysisApi {
             }
             parseAnalysis(json, articleUrl)
         } catch (_: ConnectException) {
-            throw IllegalStateException("서버에 연결할 수 없어요. 서버 주소와 상태를 확인해줘.")
+            throw IllegalStateException("로컬 서버에 연결할 수 없어요. Django 서버가 켜져 있는지 확인해줘.")
         } catch (_: SocketTimeoutException) {
             throw IllegalStateException("분석 시간이 초과됐어요. 잠시 후 다시 시도해줘.")
         } finally {

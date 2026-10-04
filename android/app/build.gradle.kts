@@ -1,17 +1,7 @@
-import java.util.Properties
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
 }
-
-val localProperties = Properties().apply {
-    val file = rootProject.file("local.properties")
-    if (file.exists()) file.inputStream().use { load(it) }
-}
-val backendBaseUrl = providers.gradleProperty("framelessBackendUrl").orNull
-    ?: localProperties.getProperty("framelessBackendUrl")
-    ?: "http://10.0.2.2:8000"
 
 android {
     namespace = "com.swpp.team5.frameless"
@@ -25,8 +15,6 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
-
-        buildConfigField("String", "BACKEND_BASE_URL", "\"${backendBaseUrl.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -44,7 +32,6 @@ android {
     }
     buildFeatures {
         compose = true
-        buildConfig = true
     }
 }
 

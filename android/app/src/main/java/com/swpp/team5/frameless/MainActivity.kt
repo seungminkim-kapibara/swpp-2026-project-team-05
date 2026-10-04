@@ -45,7 +45,6 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CancellationException
@@ -89,8 +88,6 @@ class MainActivity : ComponentActivity() {
 private fun FrameLESSApp() {
     var screen by remember { mutableStateOf(AppScreen.INPUT) }
     var articleUrl by rememberSaveable { mutableStateOf("") }
-    var teamCode by remember { mutableStateOf("") }
-    var teamCodeError by remember { mutableStateOf<String?>(null) }
     var urlError by rememberSaveable { mutableStateOf<String?>(null) }
     var loadingMessage by remember { mutableStateOf("") }
     var analysis by remember { mutableStateOf<AnalysisResult?>(null) }
@@ -106,7 +103,7 @@ private fun FrameLESSApp() {
                 loadingMessage = "원문 문장과 표현을 비교하고 있어요. 잠시만 기다려줘."
             }
             try {
-                analysis = AnalysisApi.analyze(articleUrl, teamCode)
+                analysis = AnalysisApi.analyze(articleUrl)
                 screen = AppScreen.OVERVIEW
             } catch (cancelled: CancellationException) {
                 throw cancelled
@@ -123,24 +120,16 @@ private fun FrameLESSApp() {
         AppScreen.INPUT -> {
             InputScreen(
                 articleUrl = articleUrl,
-                teamCode = teamCode,
-                teamCodeError = teamCodeError,
                 errorMessage = urlError,
                 onArticleUrlChange = {
                     articleUrl = it
                     urlError = null
-                },
-                onTeamCodeChange = {
-                    teamCode = it
-                    teamCodeError = null
                 },
                 onAnalyze = {
                     val trimmedUrl = articleUrl.trim()
 
                     if (!isValidArticleUrl(trimmedUrl)) {
                         urlError = "http:// 또는 https://로 시작하는 기사 주소를 입력해줘."
-                    } else if (AnalysisApi.requiresTeamCode && teamCode.isBlank()) {
-                        teamCodeError = "팀 테스트 코드를 입력해줘."
                     } else {
                         articleUrl = trimmedUrl
                         analysis = null
@@ -186,11 +175,8 @@ private fun FrameLESSApp() {
 @Composable
 private fun InputScreen(
     articleUrl: String,
-    teamCode: String,
-    teamCodeError: String?,
     errorMessage: String?,
     onArticleUrlChange: (String) -> Unit,
-    onTeamCodeChange: (String) -> Unit,
     onAnalyze: () -> Unit
 ) {
     Scaffold(containerColor = ScreenBackground) { paddingValues ->
@@ -265,22 +251,6 @@ private fun InputScreen(
                             }
                         }
                     )
-
-                    if (AnalysisApi.requiresTeamCode) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        OutlinedTextField(
-                            value = teamCode,
-                            onValueChange = onTeamCodeChange,
-                            modifier = Modifier.fillMaxWidth(),
-                            label = { Text("팀 테스트 코드") },
-                            singleLine = true,
-                            visualTransformation = PasswordVisualTransformation(),
-                            isError = teamCodeError != null,
-                            supportingText = {
-                                if (teamCodeError != null) Text(teamCodeError)
-                            }
-                        )
-                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
