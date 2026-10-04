@@ -35,6 +35,7 @@ internal data class AnalysisResult(
 internal object AnalysisApi {
     // The Android emulator reaches the host machine's localhost through 10.0.2.2.
     private const val BASE_URL = "http://10.0.2.2:8000"
+    private const val MAX_RELATED_ARTICLES = 3
 
     suspend fun analyze(articleUrl: String): AnalysisResult = withContext(Dispatchers.IO) {
         val connection = (URL("$BASE_URL/api/analyze").openConnection() as HttpURLConnection)
@@ -44,7 +45,8 @@ internal object AnalysisApi {
             connection.connectTimeout = 10_000
             connection.readTimeout = 300_000
             connection.doOutput = true
-            val request = JSONObject().put("url", articleUrl).put("max_related", 2)
+            val request = JSONObject().put("url", articleUrl)
+                .put("max_related", MAX_RELATED_ARTICLES)
             connection.outputStream.use { it.write(request.toString().toByteArray(Charsets.UTF_8)) }
 
             val status = connection.responseCode
