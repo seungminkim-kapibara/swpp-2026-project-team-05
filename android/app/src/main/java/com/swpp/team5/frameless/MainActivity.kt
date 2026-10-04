@@ -5,6 +5,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -41,6 +43,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CancellationException
@@ -234,6 +238,12 @@ private fun InputScreen(
                             Text("https://news.example.com/article")
                         },
                         singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            autoCorrectEnabled = false,
+                            keyboardType = KeyboardType.Uri,
+                            imeAction = ImeAction.Go
+                        ),
+                        keyboardActions = KeyboardActions(onGo = { onAnalyze() }),
                         isError = errorMessage != null,
                         supportingText = {
                             if (errorMessage != null) {
@@ -363,7 +373,7 @@ private fun ComparisonOverviewScreen(
                 Text("다른 출처에서 같은 주장에 대응하는 문장을 찾지 못했어요.")
             }
 
-            SectionTitle("보도마다 다르게 강조된 내용")
+            SectionTitle("반박하거나 다르게 해석한 내용")
 
             differentClaims.forEach { claim ->
                 ClaimSummaryCard(
@@ -389,7 +399,7 @@ private fun ClaimDetailScreen(
     val category = if (claim.type == ClaimType.SHARED) {
         "여러 출처에 공통으로 나타난 보도"
     } else {
-        "출처별 강조점 비교"
+        "반박 또는 해석 차이"
     }
 
     Scaffold(
@@ -571,7 +581,11 @@ private fun MultiSourceBriefCard(analysis: AnalysisResult) {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "입력 기사 외에 같은 사건으로 분류된 기사 ${analysis.relatedArticleCount}개를 분석했습니다. 아래 항목을 눌러 원문을 확인하세요.",
+                text = if (analysis.relatedArticleCount == 0) {
+                    "같은 사건을 다룬 다른 기사를 찾지 못했어요. 다른 기사로 다시 시도해 주세요."
+                } else {
+                    "입력 기사 외에 같은 사건으로 분류된 기사 ${analysis.relatedArticleCount}개를 분석했습니다. 아래 항목을 눌러 원문을 확인하세요."
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = Color(0xFF516072)
             )
@@ -590,7 +604,7 @@ private fun ClaimSummaryCard(
     val label = if (isShared) {
         "공통 보도"
     } else {
-        "강조점 비교"
+        "반박·해석 차이"
     }
 
     Card(
